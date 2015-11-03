@@ -30,6 +30,8 @@ And you can run it via:
 Once running, you can preview your element at
 `http://localhost:8080/components/t-linechart/`, where `t-linechart` is the name of the directory containing it.
 
+Or you can checkout `http://localhost:8080/components/t-linechart/demo` to checkout the element in action.
+
 
 ## Testing Your Element
 
