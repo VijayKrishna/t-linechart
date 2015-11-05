@@ -2,9 +2,9 @@
   "name": "t-linechart",
   "version": "1.0.0",
   "authors": [
-    "Anonymous <anonymous@example.com>"
+    "Vijay Krishna Palepu <vpalepu@outlook.com>"
   ],
-  "description": "An element providing a solution to no problem in particular.",
+  "description": "d3-enabled, reusable Polymer-element for a line-chart.",
   "keywords": [
     "web-component",
     "web-components",
@@ -15,7 +15,7 @@
   ],
   "main": "t-linechart.html",
   "license": "http://polymer.github.io/LICENSE.txt",
-  "homepage": "https://github.com/<USERNAME>/t-linechart/",
+  "homepage": "https://github.com/vijaykrishna/t-linechart/",
   "ignore": [
     "/.*",
     "/test/",
