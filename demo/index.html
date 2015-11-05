@@ -18,19 +18,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </head>
   <body>
 
-    <p>An example of <code>&lt;t-linechart&gt;</code>:</p>
-
-    <button>Say Something</button>
-
-    <t-linechart xLabel='x-axis' yLabel='y label' author='{"name": "Lord Meowser", "image": "http://placekitten.com/g/200/300"}' fancy>
-      <h2>Lorem Ipsum</h2>
+    <t-linechart >
+      <h2>Line chart with default attributes</h2>
     </t-linechart>
 
-    <script>
-      document.querySelector('button').addEventListener('click', function() {
-        alert(document.querySelector('t-linechart').sayHello('Hallo!'));
-      });
-    </script>
+    <t-linechart y-label="price($)" x-label="time">
+      <h2>Line chart with the following custom attributes</h2>
+      <ul>
+        <li>X and Y axes labels: {time}, {price($)}</li>
+      </ul>
+    </t-linechart>
+
+
+    <t-linechart y-label="price($)" x-label="date" color='maroon' height="300" width='650' x-axis-scale='date'>
+      <h2>Line chart with the following custom attributes</h2>
+      <ul>
+        <li>X and Y axes labels: {date}, {price($)}</li>
+        <li>value-line color: maroon</li>
+        <li>chart height: 300</li>
+        <li>chart width: 650</li>
+        <li>X-axis scale: date</li>
+      </ul>
+    </t-linechart>
+
+    <t-linechart y-label="price($)" x-label="date" color='maroon' height="300" width='950' x-axis-scale='date'>
+      <h2>Line chart with the following custom attributes</h2>
+      <ul>
+        <li>X and Y axes labels: {date}, {price($)}</li>
+        <li>value-line color: maroon</li>
+        <li>chart height: 300</li>
+        <li>chart width: 950</li>
+        <li>X-axis scale: date</li>
+      </ul>
+    </t-linechart>
+
+    <t-linechart y-label="price($)" x-label="time" color='maroon' smooth height="300">
+      <h2>Line chart with the following custom attributes</h2>
+      <ul>
+        <li>X and Y axes labels: {time}, {price($)}</li>
+        <li>value-line color: maroon</li>
+        <li>chart height: 300</li>
+      </ul>
+    </t-linechart>
 
   </body>
 </html>

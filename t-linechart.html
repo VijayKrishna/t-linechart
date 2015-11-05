@@ -20,49 +20,30 @@ Example:
 -->
 <dom-module id="t-linechart">
 
-
-
   <template>
 
-    <style>
-      :host {
-        display: block;
-        box-sizing: border-box;
-      }
-
-      :host .author img {
-        float: left;
-        margin-right: 5px;
-        max-height: 100px;
-        max-width: 100px;
-      }
-
-      :host.axis path,
-      :host.axis line {
+    <style type="text/css">
+      :host::shadow .axis path,
+      :host::shadow .axis line {
         fill: none;
         stroke: #000;
         shape-rendering: crispEdges;
       }
 
-      :host.xaxis path {
+      :host::shadow .x.axis path {
         display: none;
       }
 
-      :host-context(.line) {
+      :host::shadow .line {
         fill: none;
-        stroke: steelblue;
         stroke-width: 1.5px;
       }
     </style>
 
     <h1>&lt;t-linechart&gt;</h1>
+    
     <content></content>
     <div id="chart"></div>
-<!--     <p class="author">
-      <img src="{{author.image}}">
-      Cheers,<br/>
-      <span class="name">{{author.name}}</span>
-    </p> -->
   </template>
 
 </dom-module>
@@ -75,41 +56,57 @@ Example:
 
     properties: {
 
-      /**
-       * `fancy` indicates that the element should don a monocle and tophat,
-       * while checking its pocket watch.
-       */
-      fancy: Boolean,
-
-      xLabel: String,
-
-      yLabel: String,
-
-      /**
-       * Describes the author of the element, but is really just an excuse to
-       * show off JSDoc annotations.
-       *
-       * @type {{name: string, image: string}}
-       */
-      author: {
-        type: Object,
-        // Use `value` to provides a default value for a property, by setting it
-        // on your element's prototype.
-        //
-        // If you provide a function, as we do here, Polymer will call that
-        // _per element instance_.
-        //
-        // We do that to ensure that each element gets its own copy of the
-        // value, rather than having it shared across all instances (via the
-        // prototype).
-        value: function() {
-          return {
-            name:  'Dimitri Glazkov',
-            image: 'http://addyosmani.com/blog/wp-content/uploads/2013/04/unicorn.jpg',
-          };
-        }
+      xLabel: {
+        type: String,
+        value: 'x-axis'
       },
 
+      yLabel: {
+        type: String,
+        value: 'y-axis'
+      },
+
+      color: {
+        type: String,
+        value: 'steelblue'
+      },
+
+      smooth : {
+        type: Boolean,
+        value: false
+      },
+
+      width: {
+        type: Number,
+        value: 500
+      },
+
+      height: {
+        type: Number,
+        value: 500
+      },
+
+      xAxisScale: {
+        type: String,
+        value: 'linear'
+      },
+
+      yAxisScale: {
+        type: String,
+        value: 'linear'
+      }
+
+    },
+
+    // Private Helpers 
+    // TODO move to a utility library for usage by all chart elements.
+
+    _getAxisScale: function (scaleName) {
+      switch(scaleName) {
+        case 'date': return d3.time.scale();
+        case 'log': return d3.scale.log();
+        default: return d3.scale.linear();
+      }
     },
 
     // Element Lifecycle
@@ -121,40 +118,43 @@ Example:
       //
       // This is the point where you should make modifications to the DOM (when
       // necessary), or kick off any processes the element wants to perform.
-    },
+      
+      var yLabel = this.yLabel;
+      var xLabel = this.xLabel;
+      var color = this.color;
+      var interpolation = 'linear'
+      if(this.smooth) {
+        interpolation = 'basis'
+      }
 
-    attached: function() {
-      // `attached` fires once the element and its parents have been inserted
-      // into a document.
-      //
-      // This is a good place to perform any work related to your element's
-      // visual state or active behavior (measuring sizes, beginning animations,
-      // loading resources, etc).
       var margin = {top: 20, right: 20, bottom: 30, left: 50},
-      width = 960 - margin.left - margin.right,
-      height = 500 - margin.top - margin.bottom;
+      width = this.width - margin.left - margin.right,
+      height = this.height - margin.top - margin.bottom;
 
       var parseDate = d3.time.format("%d-%b-%y").parse;
 
-      var x = d3.scale.linear()
+      var x = this._getAxisScale(this.xAxisScale)
           .range([0, width]);
 
-      var y = d3.scale.linear()
+      var y = this._getAxisScale(this.yAxisScale)
           .range([height, 0]);
 
       var xAxis = d3.svg.axis()
           .scale(x)
-          .orient("bottom");
+          .orient('bottom')
+          .ticks(parseInt(width * 0.015));
 
       var yAxis = d3.svg.axis()
           .scale(y)
-          .orient("left");
+          .orient("left")
+          .ticks(parseInt(height * 0.015));
 
       var line = d3.svg.line()
+          .interpolate(interpolation)
           .x(function(d) { return x(d.date); })
           .y(function(d) { return y(d.close); });
 
-      var svg = d3.select("#chart").append("svg")
+      var svg = d3.select(this.$.chart).append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -171,32 +171,42 @@ Example:
         x.domain(d3.extent(data, function(d) { return d.date; }));
         y.domain(d3.extent(data, function(d) { return d.close; }));
 
-        svg.append("g")
-            .attr("class", "xaxis")
-            .style("stroke-width", "1px")
+        var xAxisPath = svg.append("g")
+            .attr("class", "x axis")
             .attr("transform", "translate(0," + height + ")")
             .call(xAxis)
 
-            // .attr("transform", "rotate(-90)");
+        xAxisPath.append("text")
+          .attr("x", width)
+          .style("text-anchor", "end")
+          .text(xLabel)
 
         svg.append("g")
-            .attr("class", "yaxis")
+            .attr("class", "y axis")
             .call(yAxis)
           .append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 6)
             .attr("dy", ".71em")
             .style("text-anchor", "end")
-            .text(this.yLabel);
+            .text(yLabel);
 
         svg.append("path")
             .datum(data)
-            // .attr("class", "line")
-            .style("fill", "none")
-            .style("stroke", "steelblue")
-            .style("stroke-width", "1.5px")
+            .attr("class", "line")
+            .style("stroke", color)
             .attr("d", line);
       });
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+
     },
 
     detached: function() {
@@ -204,39 +214,7 @@ Example:
       // removed from a document.
       //
       // Use this to clean up anything you did in `attached`.
-    },
-
-    // Element Behavior
-
-    /**
-     * The `t-linechart-lasers` event is fired whenever `fireLasers` is called.
-     *
-     * @event t-linechart-lasers
-     * @detail {{sound: String}}
-     */
-
-    /**
-     * Sometimes it's just nice to say hi.
-     *
-     * @param {string} greeting A positive greeting.
-     * @return {string} The full greeting.
-     */
-    sayHello: function(greeting) {
-      var response = greeting || 'Hello World!';
-      return 't-linechart says, ' + response;
-    },
-
-    /**
-     * Attempts to destroy this element's enemies with an any beam of light!
-     *
-     * Or, at least, dispatches an event in the vain hope that someone else will
-     * do the zapping.
-     */
-    fireLasers: function() {
-      this.fire('t-linechart-lasers', {sound: 'Pew pew!'});
     }
-
-
 
   });
 
