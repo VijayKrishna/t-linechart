@@ -180,12 +180,20 @@ Example:
       var xAxis = d3.svg.axis()
           .scale(x)
           .orient('bottom')
-          .ticks(parseInt(width * 0.015));
+          .ticks(parseInt(width * 0.015))
+
+      if(this.xAxisScale === 'linear') {
+        xAxis.tickFormat(d3.format("-s"));
+      }
 
       var yAxis = d3.svg.axis()
           .scale(y)
           .orient("left")
           .ticks(parseInt(height * 0.015));
+
+      if(this.yAxisScale === 'linear') {
+        yAxis.tickFormat(d3.format("-s"));
+      }
 
       var line = d3.svg.line()
           .interpolate(interpolation)
@@ -218,6 +226,7 @@ Example:
         xAxisPath.append("text")
           .attr("x", width)
           .style("text-anchor", "end")
+          .attr("dy", "-0.5em")
           .text(xLabel)
 
         svg.append("g")
