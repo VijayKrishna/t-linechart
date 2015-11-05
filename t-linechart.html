@@ -60,7 +60,7 @@ Example:
     <h1>&lt;t-linechart&gt;</h1>
     
     <content></content>
-    <div id="chart" class="svg-container"></div>
+    <div id="chart"></div>
   </template>
 
 </dom-module>
@@ -134,7 +134,6 @@ Example:
       //
       // This is the point where you should make modifications to the DOM (when
       // necessary), or kick off any processes the element wants to perform.
-      
       this._draw(this.$.chart);
 
     },
@@ -165,11 +164,6 @@ Example:
       }
 
       var ww = chartSelection.clientWidth;
-      d3.select(chartSelection).style("padding-bottom", this.height + "px");
-      console.log(ww);
-      console.log(d3.select(chartSelection));
-      
-      console.log(chartSelection);
 
       var margin = {top: 20, right: 20, bottom: 30, left: 50},
       width = ww - margin.left - margin.right,
@@ -200,10 +194,6 @@ Example:
 
       var svg = d3.select(chartSelection)
           .append("svg")
-          .attr("class", "svg-content")
-          .attr("viewBox", 
-            "0 0 " + parseInt(width + margin.left + margin.right) + " " + parseInt(height + margin.top + margin.bottom))
-          .attr("preserveAspectRatio", "xMinYMin meet")
           .attr("width", parseInt(width + margin.left + margin.right))
           .attr("height", parseInt(height + margin.top + margin.bottom))
         .append("g")
