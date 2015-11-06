@@ -135,7 +135,7 @@ Example:
       //
       // This is the point where you should make modifications to the DOM (when
       // necessary), or kick off any processes the element wants to perform.
-      this._draw(this.$.chart);
+      
 
     },
 
@@ -146,6 +146,7 @@ Example:
       // This is a good place to perform any work related to your element's
       // visual state or active behavior (measuring sizes, beginning animations,
       // loading resources, etc).
+      this._draw(this.$.chart);
     },
 
     detached: function() {
@@ -156,7 +157,9 @@ Example:
     },
 
     _draw: function (chartSelection) {
-      var ww = chartSelection.clientWidth;
+      var ww = d3.select(chartSelection).property('clientWidth');
+      console.log(chartSelection);
+      console.log(ww);
 
       var margin = {top: 20, right: 20, bottom: 30, left: 50},
       width = ww - margin.left - margin.right,
