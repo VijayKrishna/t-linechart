@@ -28,10 +28,11 @@ Example:
         fill: none;
         stroke: #000;
         shape-rendering: crispEdges;
+        stroke-width: 0.5px;
       }
 
       :host::shadow .x.axis path {
-        display: none;
+        /*stroke-width: px;*/
       }
 
       :host::shadow .line {
@@ -155,50 +156,11 @@ Example:
     },
 
     _draw: function (chartSelection) {
-      var yLabel = this.yLabel;
-      var xLabel = this.xLabel;
-      var color = this.color;
-      var interpolation = 'linear'
-      if(this.smooth) {
-        interpolation = 'basis'
-      }
-
       var ww = chartSelection.clientWidth;
 
       var margin = {top: 20, right: 20, bottom: 30, left: 50},
       width = ww - margin.left - margin.right,
       height = this.height - margin.top - margin.bottom;
-      
-      var parseDate = d3.time.format("%d-%b-%y").parse;
-
-      var x = this._getAxisScale(this.xAxisScale)
-          .range([0, width]);
-
-      var y = this._getAxisScale(this.yAxisScale)
-          .range([height, 0]);
-
-      var xAxis = d3.svg.axis()
-          .scale(x)
-          .orient('bottom')
-          .ticks(parseInt(width * 0.015))
-
-      if(this.xAxisScale === 'linear') {
-        xAxis.tickFormat(d3.format("-s"));
-      }
-
-      var yAxis = d3.svg.axis()
-          .scale(y)
-          .orient("left")
-          .ticks(parseInt(height * 0.015));
-
-      if(this.yAxisScale === 'linear') {
-        yAxis.tickFormat(d3.format("-s"));
-      }
-
-      var line = d3.svg.line()
-          .interpolate(interpolation)
-          .x(function(d) { return x(d.date); })
-          .y(function(d) { return y(d.close); });
 
       var svg = d3.select(chartSelection)
           .append("svg")
@@ -207,44 +169,90 @@ Example:
         .append("g")
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+      var that = this;
+
       d3.tsv("../data.tsv", function(error, data) {
         if (error) throw error;
 
-        data.forEach(function(d) {
-          d.date = parseDate(d.date);
-          d.close = +d.close;
-        });
+        that._setupCanvas(data, svg, height, width);
 
-        x.domain(d3.extent(data, function(d) { return d.date; }));
-        y.domain(d3.extent(data, function(d) { return d.close; }));
+      });
+    },
 
-        var xAxisPath = svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis)
+    _getInterpolation : function () {
+      return this.smooth ? 'basis' : 'linear';
+    },
 
-        xAxisPath.append("text")
+    _setupCanvas : function (data, svg, height, width) {
+
+      var parseDate = d3.time.format("%d-%b-%y").parse;
+      data.forEach(function(d) {
+        d.date = parseDate(d.date);
+        d.close = +d.close;
+      });
+
+      var x = this._getAxisScale(this.xAxisScale)
+            .range([0, width])
+            .domain(d3.extent(data, function(d) { return d.date; }));
+      var y = this._getAxisScale(this.yAxisScale)
+            .range([height, 0])
+            .domain(d3.extent(data, function(d) { return d.close; }));
+
+      var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient('bottom')
+          .ticks(parseInt(width * 0.01))
+
+      if(this.xAxisScale === 'linear') {
+        xAxis.tickFormat(d3.format("-s"));
+      }
+
+      var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient("left")
+          .ticks(parseInt(height * 0.01));
+
+      if(this.yAxisScale === 'linear') {
+        yAxis.tickFormat(d3.format("-s"));
+      }
+
+
+
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
           .attr("x", width)
           .style("text-anchor", "end")
           .attr("dy", "-0.5em")
-          .text(xLabel)
+          .text(this.xLabel)
 
-        svg.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-          .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text(yLabel);
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".5em")
+          .style("text-anchor", "end")
+          .text(this.yLabel);
 
-        svg.append("path")
-            .datum(data)
-            .attr("class", "line")
-            .style("stroke", color)
-            .attr("d", line);
-      });
+      this._plot(data, svg, x, y);
+    },
+
+    _plot : function (data, svg, x, y) {
+      var line = d3.svg.line()
+      .interpolate(this._getInterpolation())
+      .x(function(d) { return x(d.date); })
+      .y(function(d) { return y(d.close); });
+
+      svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .style("stroke", this.color)
+      .attr("d", line);
+      
     }
 
   });
