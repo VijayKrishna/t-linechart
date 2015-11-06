@@ -198,7 +198,7 @@ Example:
       } else {
         svgG = svg.attr("width", parseInt(width + margin.left + margin.right))
           .attr("height", parseInt(height + margin.top + margin.bottom))
-          .select("g")
+            .select("g")
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
       }  
 
@@ -249,7 +249,10 @@ Example:
         yAxis.tickFormat(d3.format("-s"));
       }
 
-      svgG.selectAll("*").remove();
+      var svgGKids = svgG.selectAll("*");
+      if(!svgGKids.empty()) {
+        svgGKids.remove();
+      }
 
       svgG.append("g")
           .attr("class", "x axis")
