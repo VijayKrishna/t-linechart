@@ -15,49 +15,89 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <title>t-linechart Demo</title>
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="../t-linechart.html">
+    <style type="text/css">
+      code {
+        font-family: "Courier New" Courier monospace;
+        font-size: 0.9em;
+        background-color: #CCC;
+        border-radius: 2px;
+        display: inline;
+        margin: 20px;
+      }
+    </style>
   </head>
   <body>
 
     <t-linechart >
-      <h2>Line chart with default attributes</h2>
+      <h3>Line chart with default attributes</h3>
+      <b>HTML Markup:</b>
+      <code>
+        &lt;t-linechart&gt;
+        &lt;/t-linechart&gt;
+      </code>
     </t-linechart>
 
-    <t-linechart y-label="price($)" x-label="time">
-      <h2>Line chart with the following custom attributes</h2>
+
+
+    <t-linechart y-label="price($)" x-label="time" color='#120088'>
+      <h3>Line chart with the following custom attributes</h3>
       <ul>
         <li>X and Y axes labels: {time}, {price($)}</li>
+        <li>value-line color: #120088</li>        
       </ul>
+      <b>HTML Markup:</b>
+      <code>
+        &lt;t-linechart y-label="price($)" x-label="time" color='#120088'&gt;
+        &lt;/t-linechart&gt;
+      </code>
     </t-linechart>
 
 
-    <t-linechart y-label="price($)" x-label="date" color='maroon' height="300" x-axis-scale='date'>
-      <h2>Line chart with the following custom attributes</h2>
+
+
+    <t-linechart y-label="price($)" x-label="date" color='maroon' height="700" x-axis-scale='date'>
+      <h3>Line chart with the following custom attributes</h3>
       <ul>
         <li>X and Y axes labels: {date}, {price($)}</li>
         <li>value-line color: maroon</li>
-        <li>chart height: 300</li>
+        <li>chart height: 700</li>
         <li>X-axis scale: date</li>
       </ul>
+      <b>HTML Markup:</b>
+      <code>
+        &lt;t-linechart y-label="price($)" x-label="date" color='maroon' height="700" x-axis-scale='date'&gt;
+        &lt;/t-linechart&gt;
+      </code>
     </t-linechart>
 
-    <t-linechart y-label="price($)" x-label="date" color='maroon' height="300" x-axis-scale='date'>
-      <h2>Line chart with the following custom attributes</h2>
+    <t-linechart y-label="price($)" x-label="date" color='pink' height="300" x-axis-scale='date'>
+      <h3>Line chart with the following custom attributes</h3>
       <ul>
         <li>X and Y axes labels: {date}, {price($)}</li>
-        <li>value-line color: maroon</li>
+        <li>value-line color: pink</li>
         <li>chart height: 300</li>
         <li>X-axis scale: date</li>
       </ul>
+      <b>HTML Markup:</b>
+      <code>
+        &lt;t-linechart y-label="price($)" x-label="date" color='pink' height="300" x-axis-scale='date'&gt;
+        &lt;/t-linechart&gt;
+      </code>
     </t-linechart>
 
-    <t-linechart y-label="price($)" x-label="time" color='maroon' smooth height="300" width="500">
-      <h2>Line chart with the following custom attributes</h2>
+    <t-linechart y-label="price($)" x-label="time" color='#888' smooth height="300" width="500">
+      <h3>Line chart with the following custom attributes</h3>
       <ul>
         <li>X and Y axes labels: {time}, {price($)}</li>
-        <li>value-line color: maroon</li>
+        <li>value-line color: #888</li>
         <li>chart height: 300</li>
         <li>smooth</li>
       </ul>
+      <b>HTML Markup:</b>
+      <code>
+        &lt;t-linechart y-label="price($)" x-label="time" color='#888' smooth height="300" width="500"&gt;
+        &lt;/t-linechart&gt;
+      </code>
     </t-linechart>
 
   </body>
