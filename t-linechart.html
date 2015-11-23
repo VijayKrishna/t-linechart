@@ -117,11 +117,12 @@ Example:
       yAxisData: {
         type: Array,
         value: [
-          ['label1', 'label2', 'label3', 'label4'], 
+          ['label1', 'label2', 'label3', 'label4', 'label5'], 
           [10, 12, 14, 16, 18, 20, 26], 
           [30, 11, 15, 17, 9, 21], 
           [3, 4, 30, 29, 21],
-          [-3, -10, 4, 2, 1, 0, -15]
+          [-3, -10, 4, 2, 1, 0, -15],
+          [-25, -10, 3, 28, 16, -20, -26],
           ]
       }
     },
@@ -208,7 +209,6 @@ Example:
       var svg = d3.select(chartSelection).select("svg");
 
       if(svg.empty()) {
-        console.log("svg was empty.")
         svg = d3.select(chartSelection).append("svg");
         svgG = svg.attr("width", svgWidth)
           .attr("height", svgHeight)
@@ -222,15 +222,6 @@ Example:
       }
 
       this._draw(svgG, height, width);
-
-      // var that = this;
-
-      // d3.tsv("../data.tsv", function(error, data) {
-      //   if (error) throw error;
-
-      //   that._draw(data, svgG, height, width);
-
-      // });
     },
 
     _getInterpolation : function () {
@@ -278,11 +269,6 @@ Example:
         }
       });
 
-      // data.forEach(function(d) {
-      //   d.date = parseDate(d.date);
-      //   d.close = +d.close;
-      // });
-
       var yValueArrays = this._parseYAxisData();
       
 
@@ -294,8 +280,6 @@ Example:
       for(var i = 0; i < yValueArrays.length; i += 1) {
         allYDataValues = allYDataValues.concat(yValueArrays[i]);
       }
-
-      console.log(d3.extent(allYDataValues));
 
       var y = this._getAxisScale(this.yAxisScale)
             .range([height, 0])
