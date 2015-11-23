@@ -1,0 +1,368 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+d3-enabled, reusable Polymer-element for a line-chart.
+
+Example:
+
+    <t-linechart></t-linechart>
+
+@demo
+-->
+<dom-module id="t-linechart">
+
+  <template>
+
+    <style type="text/css">
+      :host::shadow .axis path,
+      :host::shadow .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+        stroke-width: 0.5px;
+      }
+
+/*      :host::shadow .x.axis path {
+        display: visible;
+      }*/
+
+      :host::shadow .line {
+        fill: none;
+        stroke-width: 1.5px;
+      }
+
+      :host::shadow .svg-container { 
+        display: inline-block;
+        position: relative;
+        width: 100%;
+        padding-bottom: 50%;
+        vertical-align: middle; 
+        overflow: hidden; 
+      }
+
+      :host::shadow .svg-content { 
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+      }
+    </style>
+
+    <h1>&lt;t-linechart&gt;</h1>
+    
+    <content></content>
+    <div id="chart"></div>
+  </template>
+
+</dom-module>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script>
+
+  Polymer({
+
+    is: 't-linechart',
+
+    properties: {
+
+      xLabel: {
+        type: String,
+        value: 'x-axis'
+      },
+
+      yLabel: {
+        type: String,
+        value: 'y-axis'
+      },
+
+      colors: {
+        type: Array,
+        value: ['steelblue', 'orange', 'grey', 'tomato', 'seagreen']
+      },
+
+      smooth : {
+        type: Boolean,
+        value: false
+      },
+
+      height: {
+        type: Number,
+        value: 300
+      },
+
+      xAxisScale: {
+        type: String,
+        value: 'linear'
+      },
+
+      yAxisScale: {
+        type: String,
+        value: 'linear'
+      },
+
+      xAxisData: {
+        type: Array,
+        value: [-1, -2, 3, 4, 5, 6, 7]
+      },
+
+      yAxisData: {
+        type: Array,
+        value: [
+          ['label1', 'label2', 'label3', 'label4', 'label5'], 
+          [10, 12, 14, 16, 18, 20, 26], 
+          [30, 11, 15, 17, 9, 21], 
+          [3, 4, 30, 29, 21],
+          [-3, -10, 4, 2, 1, 0, -15],
+          [-25, -10, 3, 28, 16, -20, -26],
+          ]
+      }
+    },
+
+    // Private Helpers 
+    // TODO move to a utility library for usage by all chart elements.
+
+    _getAxisScale: function (scaleName) {
+      switch(scaleName) {
+        case 'date': return d3.time.scale();
+        case 'log': return d3.scale.log();
+        default: return d3.scale.linear();
+      }
+    },
+
+    //#region Global Event Listeners
+    domReady: function() {
+        this.windowResize();
+    },
+
+    windowResize: function() {
+      if(!this.$ || !this.$.chart) {
+        return;
+      }
+
+      this._setupCanvas(this.$.chart);
+    },
+    //#endregion
+
+    // Element Lifecycle
+
+    created: function () {
+      
+    },
+
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+      // necessary), or kick off any processes the element wants to perform.
+      var that = this;
+      // Add event handler for DOMContentLoaded
+      if (document.readyState != 'loading') {
+          this.domReady();
+      } else {
+          window.addEventListener('DOMContentLoaded', function () { that.domReady(); });
+      }
+
+      // Add event handler for window resize
+      window.addEventListener("resize", function() { that.windowResize(); });
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+      this._setupCanvas(this.$.chart);
+      
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+
+    _setupCanvas: function (chartSelection) {
+      var ww = d3.select(chartSelection).property('clientWidth');
+
+      var margin = {top: 20, right: 20, bottom: 30, left: 50},
+      width = ww - margin.left - margin.right,
+      height = this.height - margin.top - margin.bottom;
+
+      var svgG = null;
+      var svgHeight = parseInt(height + margin.top + margin.bottom);
+      var svgWidth = parseInt(width + margin.left + margin.right);
+      var svgLinearTranslation = "translate(" + margin.left + "," + margin.top + ")";
+      var svg = d3.select(chartSelection).select("svg");
+
+      if(svg.empty()) {
+        svg = d3.select(chartSelection).append("svg");
+        svgG = svg.attr("width", svgWidth)
+          .attr("height", svgHeight)
+            .append("g")
+          .attr("transform", svgLinearTranslation);
+      } else {
+        svgG = svg.attr("width", svgWidth)
+          .attr("height", svgHeight)
+            .select("g")
+          .attr("transform", svgLinearTranslation);
+      }
+
+      this._draw(svgG, height, width);
+    },
+
+    _getInterpolation : function () {
+      return this.smooth ? 'basis' : 'linear';
+    },
+
+    _parseYAxisData : function () {
+      if(!Array.isArray(this.yAxisData) || this.yAxisData.length <= 1) {
+        return this._drawIssue('y-axis data is missing or incomplete.');
+      }
+
+      var contractArray = this.yAxisData[0];
+      if(!Array.isArray(contractArray) || contractArray.length === 0) {
+        return this._drawIssue('no labels provided for the data lines.');
+      }
+
+      var yValueArrays = [];
+
+      for(var i = 1; i <= contractArray.length; i += 1) {
+        var valueArray = this.yAxisData[i];
+        if(!Array.isArray(valueArray) || valueArray.length === 0) {
+          console.log('data array #' + i + ' is not actually an array.');
+          contractArray.splice(i - 1, 1);
+          continue;
+        }
+
+        yValueArrays.push(valueArray);
+      }
+
+      return yValueArrays;
+    },
+
+    _drawIssue : function (message) {
+      console.log(message);
+    },
+
+    _draw : function (svgG, height, width) {
+      var parseDate = d3.time.format("%d-%b-%y").parse;
+
+      this.xAxisData.forEach(function(d) {
+        if(this.xAxisScale === 'linear') {
+          d = +d;
+        } else if(this.yAxisData === 'date') {
+          d = parseDate(d);
+        }
+      });
+
+      var yValueArrays = this._parseYAxisData();
+      
+
+      var x = this._getAxisScale(this.xAxisScale)
+            .range([0, width])
+            .domain(d3.extent(this.xAxisData));
+
+      var allYDataValues = [];
+      for(var i = 0; i < yValueArrays.length; i += 1) {
+        allYDataValues = allYDataValues.concat(yValueArrays[i]);
+      }
+
+      var y = this._getAxisScale(this.yAxisScale)
+            .range([height, 0])
+            .domain(d3.extent(allYDataValues));
+
+      var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient('bottom')
+          .ticks(parseInt(width * 0.01))
+
+      var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient("left")
+          .ticks(parseInt(height * 0.01));
+
+      if(this.xAxisScale === 'linear') {
+        xAxis.tickFormat(d3.format("-s"));
+      }
+
+      if(this.yAxisScale === 'linear') {
+        yAxis.tickFormat(d3.format("-s"));
+      }
+
+      var svgGKids = svgG.selectAll("*");
+      if(!svgGKids.empty()) {
+        svgGKids.remove();
+      }
+
+      svgG.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
+          .attr("x", width)
+          .style("text-anchor", "end")
+          .attr("dy", "-0.5em")
+          .text(this.xLabel);
+
+      svgG.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".5em")
+          .style("text-anchor", "end")
+          .text(this.yLabel);
+
+      for(var i = 0; i < yValueArrays.length; i += 1) {
+        var data = [];
+
+        var yValueArray = yValueArrays[i];
+        var limit = Math.max(this.xAxisData.length, yValueArray.length);
+        for(var j = 0; j < limit; j += 1) {
+          var item = new Object();
+          item.x = this.xAxisData[j];
+          item.y = yValueArray[j]
+          data.push(item);
+        }
+
+        data.sort(function (a, b) {
+          return a.x - b.x;
+        })
+
+        this._plot(data, svgG, x, y, this.colors[i]);
+
+      }
+
+    },
+
+    _plot : function (data, svgG, x, y, color) {
+      var line = d3.svg.line()
+      .interpolate(this._getInterpolation())
+      .x(function(d) { return x(d.x); })
+      .y(function(d) { return y(d.y); });
+
+      svgG.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .style("stroke", color)
+      .attr("d", line);
+    }
+
+  });
+
+</script>

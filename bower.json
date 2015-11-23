@@ -1,0 +1,31 @@
+{
+  "name": "t-linechart",
+  "version": "1.0.0",
+  "authors": [
+    "Vijay Krishna Palepu <vpalepu@outlook.com>"
+  ],
+  "description": "d3-enabled, reusable Polymer-element for a line-chart.",
+  "keywords": [
+    "web-component",
+    "web-components",
+    "atoms",
+    "atom-element",
+    "atom",
+    "linechart"
+  ],
+  "main": "t-linechart.html",
+  "license": "http://polymer.github.io/LICENSE.txt",
+  "homepage": "https://github.com/vijaykrishna/t-linechart/",
+  "ignore": [
+    "/.*",
+    "/test/",
+    "/demo/"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.0.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "web-component-tester": "*"
+  }
+}
