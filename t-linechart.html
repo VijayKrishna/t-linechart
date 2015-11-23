@@ -84,9 +84,9 @@ Example:
         value: 'y-axis'
       },
 
-      color: {
-        type: String,
-        value: 'steelblue'
+      colors: {
+        type: Array,
+        value: ['steelblue', 'orange', 'grey', 'tomato', 'seagreen']
       },
 
       smooth : {
@@ -107,8 +107,23 @@ Example:
       yAxisScale: {
         type: String,
         value: 'linear'
-      }
+      },
 
+      xAxisData: {
+        type: Array,
+        value: [-1, -2, 3, 4, 5, 6, 7]
+      },
+
+      yAxisData: {
+        type: Array,
+        value: [
+          ['label1', 'label2', 'label3', 'label4'], 
+          [10, 12, 14, 16, 18, 20, 26], 
+          [30, 11, 15, 17, 9, 21], 
+          [3, 4, 30, 29, 21],
+          [-3, -10, 4, 2, 1, 0, -15]
+          ]
+      }
     },
 
     // Private Helpers 
@@ -132,7 +147,7 @@ Example:
         return;
       }
 
-      this._draw(this.$.chart);
+      this._setupCanvas(this.$.chart);
     },
     //#endregion
 
@@ -159,7 +174,6 @@ Example:
 
       // Add event handler for window resize
       window.addEventListener("resize", function() { that.windowResize(); });
-
     },
 
     attached: function() {
@@ -169,7 +183,8 @@ Example:
       // This is a good place to perform any work related to your element's
       // visual state or active behavior (measuring sizes, beginning animations,
       // loading resources, etc).
-      this._draw(this.$.chart);
+      this._setupCanvas(this.$.chart);
+      
     },
 
     detached: function() {
@@ -179,71 +194,126 @@ Example:
       // Use this to clean up anything you did in `attached`.
     },
 
-    _draw: function (chartSelection) {
+    _setupCanvas: function (chartSelection) {
       var ww = d3.select(chartSelection).property('clientWidth');
 
       var margin = {top: 20, right: 20, bottom: 30, left: 50},
       width = ww - margin.left - margin.right,
       height = this.height - margin.top - margin.bottom;
 
+      var svgG = null;
+      var svgHeight = parseInt(height + margin.top + margin.bottom);
+      var svgWidth = parseInt(width + margin.left + margin.right);
+      var svgLinearTranslation = "translate(" + margin.left + "," + margin.top + ")";
       var svg = d3.select(chartSelection).select("svg");
-      var svgG;
+
       if(svg.empty()) {
-        console.log("here");
+        console.log("svg was empty.")
         svg = d3.select(chartSelection).append("svg");
-        svgG = svg.attr("width", parseInt(width + margin.left + margin.right))
-          .attr("height", parseInt(height + margin.top + margin.bottom))
+        svgG = svg.attr("width", svgWidth)
+          .attr("height", svgHeight)
             .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          .attr("transform", svgLinearTranslation);
       } else {
-        svgG = svg.attr("width", parseInt(width + margin.left + margin.right))
-          .attr("height", parseInt(height + margin.top + margin.bottom))
+        svgG = svg.attr("width", svgWidth)
+          .attr("height", svgHeight)
             .select("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-      }  
+          .attr("transform", svgLinearTranslation);
+      }
 
-      var that = this;
+      this._draw(svgG, height, width);
 
-      d3.tsv("../data.tsv", function(error, data) {
-        if (error) throw error;
+      // var that = this;
 
-        that._setupCanvas(data, svgG, height, width);
+      // d3.tsv("../data.tsv", function(error, data) {
+      //   if (error) throw error;
 
-      });
+      //   that._draw(data, svgG, height, width);
+
+      // });
     },
 
     _getInterpolation : function () {
       return this.smooth ? 'basis' : 'linear';
     },
 
-    _setupCanvas : function (data, svgG, height, width) {
+    _parseYAxisData : function () {
+      if(!Array.isArray(this.yAxisData) || this.yAxisData.length <= 1) {
+        return this._drawIssue('y-axis data is missing or incomplete.');
+      }
 
+      var contractArray = this.yAxisData[0];
+      if(!Array.isArray(contractArray) || contractArray.length === 0) {
+        return this._drawIssue('no labels provided for the data lines.');
+      }
+
+      var yValueArrays = [];
+
+      for(var i = 1; i <= contractArray.length; i += 1) {
+        var valueArray = this.yAxisData[i];
+        if(!Array.isArray(valueArray) || valueArray.length === 0) {
+          console.log('data array #' + i + ' is not actually an array.');
+          contractArray.splice(i - 1, 1);
+          continue;
+        }
+
+        yValueArrays.push(valueArray);
+      }
+
+      return yValueArrays;
+    },
+
+    _drawIssue : function (message) {
+      console.log(message);
+    },
+
+    _draw : function (svgG, height, width) {
       var parseDate = d3.time.format("%d-%b-%y").parse;
-      data.forEach(function(d) {
-        d.date = parseDate(d.date);
-        d.close = +d.close;
+
+      this.xAxisData.forEach(function(d) {
+        if(this.xAxisScale === 'linear') {
+          d = +d;
+        } else if(this.yAxisData === 'date') {
+          d = parseDate(d);
+        }
       });
+
+      // data.forEach(function(d) {
+      //   d.date = parseDate(d.date);
+      //   d.close = +d.close;
+      // });
+
+      var yValueArrays = this._parseYAxisData();
+      
 
       var x = this._getAxisScale(this.xAxisScale)
             .range([0, width])
-            .domain(d3.extent(data, function(d) { return d.date; }));
+            .domain(d3.extent(this.xAxisData));
+
+      var allYDataValues = [];
+      for(var i = 0; i < yValueArrays.length; i += 1) {
+        allYDataValues = allYDataValues.concat(yValueArrays[i]);
+      }
+
+      console.log(d3.extent(allYDataValues));
+
       var y = this._getAxisScale(this.yAxisScale)
             .range([height, 0])
-            .domain(d3.extent(data, function(d) { return d.close; }));
+            .domain(d3.extent(allYDataValues));
 
       var xAxis = d3.svg.axis()
           .scale(x)
           .orient('bottom')
           .ticks(parseInt(width * 0.01))
 
-      if(this.xAxisScale === 'linear') {
-        xAxis.tickFormat(d3.format("-s"));
-      }
-
       var yAxis = d3.svg.axis()
           .scale(y)
           .orient("left")
           .ticks(parseInt(height * 0.01));
+
+      if(this.xAxisScale === 'linear') {
+        xAxis.tickFormat(d3.format("-s"));
+      }
 
       if(this.yAxisScale === 'linear') {
         yAxis.tickFormat(d3.format("-s"));
@@ -262,7 +332,7 @@ Example:
           .attr("x", width)
           .style("text-anchor", "end")
           .attr("dy", "-0.5em")
-          .text(this.xLabel)
+          .text(this.xLabel);
 
       svgG.append("g")
           .attr("class", "y axis")
@@ -274,21 +344,39 @@ Example:
           .style("text-anchor", "end")
           .text(this.yLabel);
 
-      this._plot(data, svgG, x, y);
+      for(var i = 0; i < yValueArrays.length; i += 1) {
+        var data = [];
+
+        var yValueArray = yValueArrays[i];
+        var limit = Math.max(this.xAxisData.length, yValueArray.length);
+        for(var j = 0; j < limit; j += 1) {
+          var item = new Object();
+          item.x = this.xAxisData[j];
+          item.y = yValueArray[j]
+          data.push(item);
+        }
+
+        data.sort(function (a, b) {
+          return a.x - b.x;
+        })
+
+        this._plot(data, svgG, x, y, this.colors[i]);
+
+      }
+
     },
 
-    _plot : function (data, svgG, x, y) {
+    _plot : function (data, svgG, x, y, color) {
       var line = d3.svg.line()
       .interpolate(this._getInterpolation())
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(d.close); });
+      .x(function(d) { return x(d.x); })
+      .y(function(d) { return y(d.y); });
 
       svgG.append("path")
       .datum(data)
       .attr("class", "line")
-      .style("stroke", this.color)
+      .style("stroke", color)
       .attr("d", line);
-      
     }
 
   });
